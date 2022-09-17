@@ -7,20 +7,15 @@ const MhsSchema = new mongoose.Schema(
 		fullName: { type: String, required: true },
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
-
-		// prodi mbkm
 		programMBKM: { type: String, default: null },
-
-		// upload sk diterima mbkm
-		skMitra: { type: String, default: null },
-
-		// upload borang mbkm
-		borangMatkul: [{ type: String, default: null }],
-
-		// upload logsheet
+		skAcc: { type: String, default: null },
+		borangKonversi: [
+			{
+				name: { type: String, default: null },
+				borang: { type: String, default: null },
+			},
+		],
 		logsheet: [{ type: String, default: null }],
-
-		// temporary for reset password
 		resetPasswordToken: { type: String, default: null },
 		resetPasswordExpires: { type: Date, default: null },
 	},

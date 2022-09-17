@@ -3,6 +3,7 @@ const controller = require('express')();
 // gunakan modul ini supaya tidak perlu ribet return error
 const asyncHandler = require('express-async-handler');
 const generateToken = require('../utils/generateToken');
+const upload = require('../utils/multerSetup');
 
 //endpoint untuk melakukan login
 controller.post(
@@ -14,15 +15,16 @@ controller.post(
 		// cari satu user berdasarkan email
 		const user = await MhsModel.findOne({ email });
 
+		if (!user) {
+			res.status(404);
+			throw new Error('Pengguna tidak ditemukan!');
+		}
+
 		// jika user ada dan password = dengan yang di db, jalankan ini
 		if (user && (await user.matchPassword(password))) {
 			// dapatkan respon balik berformat json dari server berisi data ini
 			res.status(200).json({
-				_id: user._id,
-				nim: user.nim,
-				fullName: user.fullName,
-				email: user.email,
-				skMitra: user.skMitra,
+				user,
 				token: generateToken(user._id),
 				message: 'Sukses login',
 			});
@@ -57,15 +59,12 @@ controller.post(
 		}
 
 		// buat model baru dan simpan kedalam variabel data
-		const data = new MhsModel({ nim, fullName, email, password });
+		const user = new MhsModel({ nim, fullName, email, password });
 
 		// tunggu modelnya di save
-		await data.save();
-		// dapatkan respon balik berformat json dari server berisi data ini
-		res.status(200).json({
-			data,
-			message: 'Sukses menambahkan pengguna baru',
-		});
+		await user.save();
+		// dapatkan respon balik berformat json dari server berisi user ini
+		res.status(200).json(user);
 	})
 );
 
@@ -107,18 +106,23 @@ controller.get(
 // endpoint untuk update/edit data user
 controller.patch(
 	'/update/:id',
+	// jangan lupa pasang middleware ini
+	upload,
 	asyncHandler(async (req, res, next) => {
 		const id = req.params.id;
-		const updatedData = req.body;
+		// const {fullName, nim, email} = req.body;
+		const update = req.body;
+		// const skAcc = req.file.path;
 		const options = { new: true };
 
-		const data = await MhsModel.findByIdAndUpdate(id, updatedData, options);
+		const data = await MhsModel.findByIdAndUpdate(id, update, options);
 
 		// data not found
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
-		res.send(data);
+		// if (!req.file) return res.send('Please upload a file')
+		res.status(200).send(data);
 	})
 );
 
@@ -140,3 +144,9 @@ controller.delete(
 );
 
 module.exports = controller;
+
+// optimasi google
+// web dev optimize
+// google dev optimize
+// web.dev/fast
+// web.dev/seo
