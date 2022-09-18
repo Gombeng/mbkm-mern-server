@@ -23,10 +23,21 @@ controller.post(
 		// jika user ada dan password = dengan yang di db, jalankan ini
 		if (user && (await user.matchPassword(password))) {
 			// dapatkan respon balik berformat json dari server berisi data ini
+
+			let { _id, email, fullName, nim, programMBKM, skAcc, borangKonversi } =
+				user;
+
 			res.status(200).json({
-				user,
+				user: {
+					_id,
+					email,
+					fullName,
+					nim,
+					programMBKM,
+					skAcc,
+					borangKonversi,
+				},
 				token: generateToken(user._id),
-				message: 'Sukses login',
 			});
 		} else {
 			res.status(402);
@@ -62,9 +73,26 @@ controller.post(
 		const user = new MhsModel({ nim, fullName, email, password });
 
 		// tunggu modelnya di save
-		await user.save();
-		// dapatkan respon balik berformat json dari server berisi user ini
-		res.status(200).json(user);
+		await user
+			.save()
+			.then((user) => {
+				let { _id, email, fullName, nim, programMBKM, skAcc, borangKonversi } =
+					user;
+
+				res.status(200).json({
+					user: {
+						_id,
+						email,
+						fullName,
+						nim,
+						programMBKM,
+						skAcc,
+						borangKonversi,
+					},
+					token: generateToken(user._id),
+				});
+			})
+			.catch((error) => next(error));
 	})
 );
 
