@@ -16,8 +16,8 @@ const MhsSchema = new mongoose.Schema(
 			},
 		],
 		logsheet: [{ type: String, default: null }],
-		resetPasswordToken: { type: String, default: null },
-		resetPasswordExpires: { type: Date, default: null },
+		// resetPasswordToken: { type: String, default: null },
+		// resetPasswordExpires: { type: Date, default: null },
 	},
 	{
 		timestamps: {
@@ -40,6 +40,6 @@ MhsSchema.pre('save', async function (next) {
 	this.password = await bcrypt.hash(this.password, salt);
 });
 
-const mhsModel = mongoose.model('student', MhsSchema);
+const MhsModel = mongoose.model('student', MhsSchema);
 
-module.exports = mhsModel;
+module.exports = MhsModel;

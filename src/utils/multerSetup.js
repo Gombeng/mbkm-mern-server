@@ -1,5 +1,3 @@
-
-const path = require('path');
 const multer = require('multer');
 
 const storage = multer.diskStorage({
@@ -17,11 +15,11 @@ const fileFilter = (req, file, cb) => {
 	if (allowedFileTypes.includes(file.mimetype)) {
 		cb(null, true);
 	} else {
-		cb(new Error("tes error"));
+		cb(new Error('.jpg / .jpeg / .png only'));
 	}
 };
 
 // nama parameter di dalam single harus sama dengan input name di front end :)
 const upload = multer({ storage, fileFilter }).single('file');
 
-module.exports = upload
+module.exports = upload;

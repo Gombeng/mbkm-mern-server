@@ -5,6 +5,42 @@ const asyncHandler = require('express-async-handler');
 const generateToken = require('../utils/generateToken');
 const upload = require('../utils/multerSetup');
 
+//endpoint untuk mendapatkan semua user
+controller.get(
+	'/getAll',
+	asyncHandler(async (req, res, next) => {
+		// ambil semua data mahasiswa yang ada di db
+		const data = await MhsModel.find();
+
+		// data not found
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+
+		// respon dari server berupa data mahasiswa
+		res.status(200).json(data);
+	})
+);
+
+// endpoint untuk mendapatkan satu user berdasarkan id
+controller.get(
+	// get data berdasarkan id, lihat ujung urlnya :id
+	'/getOne/:id',
+	asyncHandler(async (req, res, next) => {
+		// jadi di sini nanti pas req.params.(harus sama dengan yang di ujung url)
+		const { id } = req.params;
+		const data = await MhsModel.findById(id);
+
+		// data not found
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+
+		// respon dari server berupa data mahasiswa
+		res.status(200).json(data);
+	})
+);
+
 //endpoint untuk melakukan login
 controller.post(
 	'/login',
@@ -23,8 +59,7 @@ controller.post(
 		// jika user ada dan password = dengan yang di db, jalankan ini
 		if (user && (await user.matchPassword(password))) {
 			// dapatkan respon balik berformat json dari server berisi data ini
-
-			let { _id, email, fullName, nim, programMBKM, skAcc, borangKonversi } =
+			const { _id, email, fullName, nim, programMBKM, skAcc, borangKonversi } =
 				user;
 
 			res.status(200).json({
@@ -76,8 +111,15 @@ controller.post(
 		await user
 			.save()
 			.then((user) => {
-				let { _id, email, fullName, nim, programMBKM, skAcc, borangKonversi } =
-					user;
+				const {
+					_id,
+					email,
+					fullName,
+					nim,
+					programMBKM,
+					skAcc,
+					borangKonversi,
+				} = user;
 
 				res.status(200).json({
 					user: {
@@ -96,60 +138,25 @@ controller.post(
 	})
 );
 
-//endpoint untuk mendapatkan semua user
-controller.get(
-	'/getAll',
-	asyncHandler(async (req, res, next) => {
-		// ambil semua data mahasiswa yang ada di db
-		const data = await MhsModel.find();
-
-		// data not found
-		if (!data) {
-			throw new Error('Gagal memuat data!');
-		}
-
-		// respon dari server berupa data mahasiswa
-		res.status(200).json(data);
-	})
-);
-
-// endpoint untuk mendapatkan satu user berdasarkan id
-controller.get(
-	// get data berdasarkan id, lihat ujung urlnya :id
-	'/getOne/:id',
-	asyncHandler(async (req, res, next) => {
-		// jadi di sini nanti pas req.params.(harus sama dengan yang di ujung url)
-		const data = await MhsModel.findById(req.params.id);
-
-		// data not found
-		if (!data) {
-			throw new Error('Gagal memuat data!');
-		}
-
-		// respon dari server berupa data mahasiswa
-		res.status(200).json(data);
-	})
-);
-
-// endpoint untuk update/edit data user
+// endpoint untuk upload sk acc user
 controller.patch(
-	'/update/:id',
+	'/upload/:id',
 	// jangan lupa pasang middleware ini
 	upload,
 	asyncHandler(async (req, res, next) => {
-		const id = req.params.id;
-		// const {fullName, nim, email} = req.body;
-		const update = req.body;
-		// const skAcc = req.file.path;
-		const options = { new: true };
-
-		const data = await MhsModel.findByIdAndUpdate(id, update, options);
-
-		// data not found
-		if (!data) {
-			throw new Error('Gagal memuat data!');
+		if (!req.file) {
+			throw new Error('Select an image!');
 		}
-		// if (!req.file) return res.send('Please upload a file')
+
+		const { id } = req.params;
+		const image = req.file.path;
+		const options = { new: true };
+		const data = await MhsModel.findByIdAndUpdate(
+			id,
+			{ skAcc: image },
+			options
+		);
+
 		res.status(200).send(data);
 	})
 );
