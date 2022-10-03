@@ -63,7 +63,7 @@ controller.post(
 				user;
 
 			res.status(200).json({
-				user: {
+				data: {
 					_id,
 					email,
 					fullName,
@@ -122,7 +122,7 @@ controller.post(
 				} = user;
 
 				res.status(200).json({
-					user: {
+					data: {
 						_id,
 						email,
 						fullName,
@@ -158,6 +158,27 @@ controller.patch(
 		);
 
 		res.status(200).send(data);
+	})
+);
+
+// endpoint untuk upload logsheet harian
+controller.post(
+	'/upload-logsheet/:id',
+	asyncHandler(async (req, res, next) => {
+		const { id } = req.params;
+		const { logsheet } = req.body;
+		const options = { new: false };
+
+		await MhsModel.findById(id)
+			.then(async (data) => {
+				data.logsheet.push(logsheet);
+
+				await data
+					.save()
+					.then((data) => res.status(200).send(data))
+					.catch((err) => next(err));
+			})
+			.catch((err) => next(err));
 	})
 );
 
