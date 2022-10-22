@@ -1,4 +1,4 @@
-const AdminModel = require('../models/mhs.model');
+const AdminModel = require('../models/admin.model');
 const controller = require('express')();
 // gunakan modul ini supaya tidak perlu ribet return error
 const asyncHandler = require('express-async-handler');
@@ -78,11 +78,10 @@ controller.post(
 	'/register',
 	asyncHandler(async (req, res, next) => {
 		// request ke server untuk dapatkan varibel ini
-		const { nim, fullName, email, password } = req.body;
+		const { fullName, email, password } = req.body;
 
 		// cari satu user berdasarkan email
 		const userEmail = await AdminModel.findOne({ email });
-		const userNim = await AdminModel.findOne({ nim });
 
 		// jika email user ada di db, jalankan ini
 		if (userEmail) {
@@ -90,27 +89,13 @@ controller.post(
 			throw new Error('Email sudah digunakan!');
 		}
 
-		// jika nim user ada di db, jalankan ini
-		if (userNim) {
-			res.status(402);
-			throw new Error('Nim sudah digunakan!');
-		}
-
 		// buat model baru dan simpan kedalam variabel data
-		const user = new AdminModel({ nim, fullName, email, password });
+		const user = new AdminModel({ fullName, email, password });
 
 		// tunggu modelnya di save
 		await user
 			.save()
 			.then((user) => {
-				// const {
-				// 	_id,
-				// 	email,
-				// 	fullName,
-				// 	nim,
-				// 	programMBKM,
-				// 	skAcc,
-				// 	borangKonversi,
 				// } = user;
 
 				res.status(200).json({
