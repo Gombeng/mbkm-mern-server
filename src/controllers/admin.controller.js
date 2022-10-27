@@ -96,8 +96,6 @@ controller.post(
 		await user
 			.save()
 			.then((user) => {
-				// } = user;
-
 				res.status(200).json({
 					data: user,
 					token: generateToken(user._id),
@@ -107,47 +105,17 @@ controller.post(
 	})
 );
 
-// endpoint untuk upload sk acc
-controller.patch(
-	'/upload/:id',
-	// jangan lupa pasang middleware ini
-	upload,
-	asyncHandler(async (req, res, next) => {
-		if (!req.file) {
-			throw new Error('Select an image!');
-		}
-
-		const { id } = req.params;
-		const image = req.file.path;
-		const options = { new: true };
-		const data = await AdminModel.findByIdAndUpdate(
-			id,
-			{ skAcc: image },
-			options
-		);
-
-		res.status(200).send(data);
-	})
-);
-
-// endpoint untuk upload logsheet harian
+// TODO: endpoint untuk isi rps matkul
 controller.post(
-	'/upload-logsheet/:id',
+	'/isi-rps',
 	asyncHandler(async (req, res, next) => {
 		const { id } = req.params;
-		const { logsheet } = req.body;
-		const options = { new: false };
+		const user = await AdminModel.findById(id);
 
-		await AdminModel.findById(id)
-			.then(async (data) => {
-				data.logsheet.push(logsheet);
-
-				await data
-					.save()
-					.then((data) => res.status(200).send(data))
-					.catch((err) => next(err));
-			})
-			.catch((err) => next(err));
+		// data not found
+		if (!data) {
+			throw new Error('Not found!');
+		}
 	})
 );
 

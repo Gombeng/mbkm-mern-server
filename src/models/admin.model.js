@@ -1,11 +1,53 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const { Schema, model } = mongoose;
 
-const AdminSchema = new mongoose.Schema(
+// const user = {
+// 	id: 1,
+// 	fullName: "Admin Gombeng",
+// 	email: "admin@gombeng.com",
+// 	password: "lkasdjfkj3pu34urwerir2jr42",
+// 	subjects: [
+// 		{
+// 			id: 1,
+// 			code: "1234",
+// 			name: "Pemrograman Website",
+// 			cpmk: [
+// 				{
+// 					id: 1,
+// 					code: "1234",
+// 					name: "Judul besar cpmk",
+// 					desc: "Detail cpmk"
+// 				},
+// 				{
+// 					id: 1,
+// 					code: "1234",
+// 					name: "Judul besar cpmk",
+// 					desc: "Detail cpmk"
+// 				},
+// 			]
+// 		},
+// 	]
+// }
+
+const CpmkSchema = new Schema({
+	code: { type: String, required: true },
+	name: { type: String, required: true },
+	desc: { type: String, required: true },
+});
+
+const SubjectSchema = new Schema({
+	code: { type: String, required: true },
+	name: { type: String, required: true },
+	cpmk: [{ CpmkSchema }],
+});
+
+const AdminSchema = new Schema(
 	{
 		fullName: { type: String, required: true },
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
+		subjects: [{ SubjectSchema }],
 	},
 	{
 		timestamps: {
@@ -28,6 +70,6 @@ AdminSchema.pre('save', async function (next) {
 	this.password = await bcrypt.hash(this.password, salt);
 });
 
-const AdminModel = mongoose.model('admin', AdminSchema);
+const AdminModel = model('admin', AdminSchema);
 
 module.exports = AdminModel;
