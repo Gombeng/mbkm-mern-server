@@ -105,17 +105,53 @@ controller.post(
 	})
 );
 
-// TODO: endpoint untuk isi rps matkul
+// TODO: endpoint untuk input matkul
 controller.post(
-	'/isi-rps',
+	'/input-matkul/:id',
 	asyncHandler(async (req, res, next) => {
 		const { id } = req.params;
-		const user = await AdminModel.findById(id);
+		const { code, name } = req.body;
+		const subject = { code: code, name: name };
 
-		// data not found
-		if (!data) {
-			throw new Error('Not found!');
-		}
+		// const user = await AdminModel.findById(id);
+		// user.subject.push(subject);
+
+		// * DONE
+		const user = await AdminModel.findByIdAndUpdate(id, {
+			$push: { subjects: subject },
+		})
+			.then((user) => {
+				res.status(200).json({
+					data: user,
+				});
+			})
+			.catch((error) => next(error));
+	})
+);
+
+// TODO: endpoint untuk isi rps matkul
+controller.post(
+	'/isi-rps/:idAdmin/:idMatkul',
+	asyncHandler(async (req, res, next) => {
+		const { idAdmin, idMatkul } = req.params;
+
+		const { id } = req.params;
+		const { code, name } = req.body;
+		const subject = { code: code, name: name };
+
+		// * CONFUSE: data baru akan masuk/disimpan setelah disubmit 2 kali, rada aneh
+		// const user = await AdminModel.update(
+		// 	{ _id: id },
+		// 	{
+		// 		$push: { subjects: subject },
+		// 	}
+		// )
+		// 	.then((user) => {
+		// 		res.status(200).json({
+		// 			data: user,
+		// 		});
+		// 	})
+		// 	.catch((error) => next(error));
 	})
 );
 

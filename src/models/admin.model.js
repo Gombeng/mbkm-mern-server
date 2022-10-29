@@ -39,7 +39,7 @@ const CpmkSchema = new Schema({
 const SubjectSchema = new Schema({
 	code: { type: String, required: true },
 	name: { type: String, required: true },
-	cpmk: [{ CpmkSchema }],
+	cpmk: [CpmkSchema],
 });
 
 const AdminSchema = new Schema(
@@ -47,7 +47,7 @@ const AdminSchema = new Schema(
 		fullName: { type: String, required: true },
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
-		subjects: [{ SubjectSchema }],
+		subjects: [SubjectSchema],
 	},
 	{
 		timestamps: {
