@@ -4,6 +4,7 @@ const controller = require('express')();
 const asyncHandler = require('express-async-handler');
 const generateToken = require('../utils/generateToken');
 const upload = require('../utils/multerSetup');
+const mongoose = require('mongoose');
 
 //endpoint untuk mendapatkan semua user
 controller.get(
@@ -105,7 +106,7 @@ controller.post(
 	})
 );
 
-// TODO: endpoint untuk input matkul
+// * DONE: endpoint untuk input matkul
 controller.post(
 	'/input-matkul/:id',
 	asyncHandler(async (req, res, next) => {
@@ -129,23 +130,42 @@ controller.post(
 	})
 );
 
-// TODO: endpoint untuk isi rps matkul
+// TODO: endpoint untuk input rps matkul
 controller.post(
-	'/isi-rps/:idAdmin/:idMatkul',
+	// '/input-rps/:idAdmin/:idMatkul',
+	'/input-rps/:idAdmin/:idMatkul',
 	asyncHandler(async (req, res, next) => {
 		const { idAdmin, idMatkul } = req.params;
-
-		const { id } = req.params;
 		const { code, name } = req.body;
-		const subject = { code: code, name: name };
+		const cpmk = { code: code, name: name };
+		const user = await AdminModel.findByIdAndUpdate(
+			{
+				_id: mongoose.Types.ObjectId(idAdmin),
+				'subjects._id': mongoose.Types.ObjectId(idMatkul),
+			},
+			{
+				$push: { 'subjects.$.cpmk': cpmk },
+			}
+		)
+			.then((user) => {
+				res.status(200).send('sukses');
+			})
+			.catch((error) => next(error));
+		// let dataCpmk;
+		// const user = await AdminModel.findById(idAdmin)
+		// 	.then((user) => {
+		// 		user.subjects.findByIdAndUpdate(idMatkul, {
+		// 			$push: { cpmk: cpmk },
+		// 		});
+		// 	})
+		// 	.catch((err) => next(err));
+		// const data = user.subjects.filter((x) => x._id == idMatkul);
 
-		// * CONFUSE: data baru akan masuk/disimpan setelah disubmit 2 kali, rada aneh
-		// const user = await AdminModel.update(
-		// 	{ _id: id },
-		// 	{
-		// 		$push: { subjects: subject },
-		// 	}
-		// )
+		// console.log(user.subjects._id);
+
+		// const user = await AdminModel.findByIdAndUpdate(id, {
+		// 	$push: { subjects.cpmk: cpmk },
+		// })
 		// 	.then((user) => {
 		// 		res.status(200).json({
 		// 			data: user,

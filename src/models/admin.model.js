@@ -33,7 +33,6 @@ const { Schema, model } = mongoose;
 const CpmkSchema = new Schema({
 	code: { type: String, required: true },
 	name: { type: String, required: true },
-	desc: { type: String, required: true },
 });
 
 const SubjectSchema = new Schema({
