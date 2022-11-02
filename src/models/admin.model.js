@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const { Schema, model } = mongoose;
+const { ObjectId } = Schema.Types;
 
 // const user = {
 // 	id: 1,
@@ -33,26 +34,37 @@ const { Schema, model } = mongoose;
 const CpmkSchema = new Schema({
 	code: { type: String, required: true },
 	name: { type: String, required: true },
+
+	// * one cpmk only owned by one subject | one to one
+	_subject: { type: ObjectId, ref: 'subject' },
 });
+
+const CpmkModel = model('cpmk', CpmkSchema);
 
 const SubjectSchema = new Schema({
 	code: { type: String, required: true },
 	name: { type: String, required: true },
-	cpmk: [CpmkSchema],
+
+	// * one subject only owned by one admin | one to one
+	_admin: { type: ObjectId, ref: 'admin' },
+
+	// * one subject can have multiple cpmk | one to many
+	_cpmks: [{ type: ObjectId, ref: 'cpmk' }],
 });
+
+const SubjectModel = model('subject', SubjectSchema);
 
 const AdminSchema = new Schema(
 	{
 		fullName: { type: String, required: true },
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
-		subjects: [SubjectSchema],
+
+		// * one admin can have multiple subject | one to many
+		_subjects: [{ type: ObjectId, ref: 'subject' }],
 	},
 	{
-		timestamps: {
-			createdAt: 'createdAt',
-			updatedAt: 'updatedAt',
-		},
+		timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
 	}
 );
 
@@ -71,4 +83,4 @@ AdminSchema.pre('save', async function (next) {
 
 const AdminModel = model('admin', AdminSchema);
 
-module.exports = AdminModel;
+module.exports = { AdminModel, SubjectModel, CpmkModel };

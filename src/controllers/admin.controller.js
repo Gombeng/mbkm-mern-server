@@ -1,4 +1,8 @@
-const AdminModel = require('../models/admin.model');
+const {
+	AdminModel,
+	SubjectModel,
+	CpmkModel,
+} = require('../models/admin.model');
 const controller = require('express')();
 // gunakan modul ini supaya tidak perlu ribet return error
 const asyncHandler = require('express-async-handler');
@@ -6,7 +10,7 @@ const generateToken = require('../utils/generateToken');
 const upload = require('../utils/multerSetup');
 const mongoose = require('mongoose');
 
-//endpoint untuk mendapatkan semua user
+// endpoint untuk mendapatkan semua user
 controller.get(
 	'/getAll',
 	asyncHandler(async (req, res, next) => {
@@ -19,7 +23,41 @@ controller.get(
 		}
 
 		// respon dari server berupa data mahasiswa
-		res.status(200).json(data);
+		res.status(200).json({ data: data });
+	})
+);
+
+// ENDPOINT TO GET ALL SUBJECTS
+controller.get(
+	'/getAll/subjects',
+	asyncHandler(async (req, res, next) => {
+		// ambil semua data mahasiswa yang ada di db
+		const data = await AdminModel.find().populate('_subjects');
+
+		// data not found
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+
+		// respon dari server berupa data mahasiswa
+		res.status(200).json({ data: data });
+	})
+);
+
+// ENDPOINT TO GET ALL CPMKS
+controller.get(
+	'/getAll/cpmks',
+	asyncHandler(async (req, res, next) => {
+		// ambil semua data mahasiswa yang ada di db
+		const data = await SubjectModel.find().populate('_cpmks');
+
+		// data not found
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+
+		// respon dari server berupa data mahasiswa
+		res.status(200).json({ data: data });
 	})
 );
 
@@ -38,7 +76,7 @@ controller.get(
 		}
 
 		// respon dari server berupa data mahasiswa
-		res.status(200).json(data);
+		res.status(200).json({ data: data });
 	})
 );
 
@@ -111,67 +149,65 @@ controller.post(
 	'/input-matkul/:id',
 	asyncHandler(async (req, res, next) => {
 		const { id } = req.params;
-		const { code, name } = req.body;
-		const subject = { code: code, name: name };
 
-		// const user = await AdminModel.findById(id);
-		// user.subject.push(subject);
-
-		// * DONE
-		const user = await AdminModel.findByIdAndUpdate(id, {
-			$push: { subjects: subject },
-		})
-			.then((user) => {
-				res.status(200).json({
-					data: user,
-				});
+		await AdminModel.findById(id)
+			.then((admin) => {
+				const newSubject = new SubjectModel(req.body);
+				newSubject._admin = admin._id;
+				admin._subjects.push(newSubject);
+				admin
+					.save()
+					.then((data) => {
+						newSubject
+							.save()
+							.then((data) => {
+								res.status(200).json({
+									data: data,
+								});
+							})
+							.catch((err) => {
+								next(err);
+							});
+					})
+					.catch((err) => {
+						next(err);
+					});
 			})
-			.catch((error) => next(error));
+			.catch((err) => next(err));
 	})
 );
 
-// TODO: endpoint untuk input rps matkul
+// TODO : isi rps
 controller.post(
 	// '/input-rps/:idAdmin/:idMatkul',
-	'/input-rps/:idAdmin/:idMatkul',
+	'/input-rps/:idSubject',
 	asyncHandler(async (req, res, next) => {
-		const { idAdmin, idMatkul } = req.params;
-		const { code, name } = req.body;
-		const cpmk = { code: code, name: name };
-		const user = await AdminModel.findByIdAndUpdate(
-			{
-				_id: mongoose.Types.ObjectId(idAdmin),
-				'subjects._id': mongoose.Types.ObjectId(idMatkul),
-			},
-			{
-				$push: { 'subjects.$.cpmk': cpmk },
-			}
-		)
-			.then((user) => {
-				res.status(200).send('sukses');
+		const { idSubject } = req.params;
+
+		await SubjectModel.findById(idSubject)
+			.then((subject) => {
+				const newCpmk = new CpmkModel(req.body);
+				newCpmk._subject = subject._id;
+				subject._cpmks.push(newCpmk);
+				subject
+					.save()
+					.then((data) => {
+						newCpmk
+							.save()
+							.then((data) => {
+								res.status(200).json({
+									data: data,
+								});
+							})
+							.catch((err) => {
+								next(err);
+							});
+					})
+					.catch((err) => {
+						next(err);
+					});
 			})
-			.catch((error) => next(error));
-		// let dataCpmk;
-		// const user = await AdminModel.findById(idAdmin)
-		// 	.then((user) => {
-		// 		user.subjects.findByIdAndUpdate(idMatkul, {
-		// 			$push: { cpmk: cpmk },
-		// 		});
-		// 	})
-		// 	.catch((err) => next(err));
-		// const data = user.subjects.filter((x) => x._id == idMatkul);
-
-		// console.log(user.subjects._id);
-
-		// const user = await AdminModel.findByIdAndUpdate(id, {
-		// 	$push: { subjects.cpmk: cpmk },
-		// })
-		// 	.then((user) => {
-		// 		res.status(200).json({
-		// 			data: user,
-		// 		});
-		// 	})
-		// 	.catch((error) => next(error));
+			.catch((err) => next(err));
 	})
 );
 
