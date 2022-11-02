@@ -10,84 +10,84 @@ const generateToken = require('../utils/generateToken');
 const upload = require('../utils/multerSetup');
 const mongoose = require('mongoose');
 
-// endpoint untuk mendapatkan semua user
+// GET ALL ADMIN
 controller.get(
 	'/getAll',
 	asyncHandler(async (req, res, next) => {
-		// ambil semua data mahasiswa yang ada di db
 		const data = await AdminModel.find();
 
-		// data not found
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
 
-		// respon dari server berupa data mahasiswa
 		res.status(200).json({ data: data });
 	})
 );
 
-// ENDPOINT TO GET ALL SUBJECTS
+// GET ALL SUBJECTS
 controller.get(
 	'/getAll/subjects',
 	asyncHandler(async (req, res, next) => {
-		// ambil semua data mahasiswa yang ada di db
 		const data = await AdminModel.find().populate('_subjects');
 
-		// data not found
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
 
-		// respon dari server berupa data mahasiswa
 		res.status(200).json({ data: data });
 	})
 );
 
-// ENDPOINT TO GET ALL CPMKS
+// GET ALL ONE USER SUBJECTS
+controller.get(
+	'/getAll/subjects/:id',
+	asyncHandler(async (req, res, next) => {
+		const { id } = req.params;
+		const data = await AdminModel.findById(id).populate('_subjects');
+
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+
+		res.status(200).json({ data: data });
+	})
+);
+
+// GET ALL CPMKS
 controller.get(
 	'/getAll/cpmks',
 	asyncHandler(async (req, res, next) => {
-		// ambil semua data mahasiswa yang ada di db
 		const data = await SubjectModel.find().populate('_cpmks');
 
-		// data not found
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
 
-		// respon dari server berupa data mahasiswa
 		res.status(200).json({ data: data });
 	})
 );
 
-// endpoint untuk mendapatkan satu user berdasarkan id
+// GET USER BY ID
 controller.get(
-	// get data berdasarkan id, lihat ujung urlnya :id
 	'/getOne/:id',
 	asyncHandler(async (req, res, next) => {
-		// jadi di sini nanti pas req.params.(harus sama dengan yang di ujung url)
 		const { id } = req.params;
 		const data = await AdminModel.findById(id);
 
-		// data not found
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
 
-		// respon dari server berupa data mahasiswa
 		res.status(200).json({ data: data });
 	})
 );
 
-//endpoint untuk melakukan login
+// LOGIN USER
 controller.post(
 	'/login',
 	asyncHandler(async (req, res, next) => {
-		// request ke server untuk dapatkan varibel ini
 		const { email, password } = req.body;
 
-		// cari satu user berdasarkan email
 		const user = await AdminModel.findOne({ email });
 
 		if (!user) {
@@ -95,12 +95,7 @@ controller.post(
 			throw new Error('Pengguna tidak ditemukan!');
 		}
 
-		// jika user ada dan password = dengan yang di db, jalankan ini
 		if (user && (await user.matchPassword(password))) {
-			// dapatkan respon balik berformat json dari server berisi data ini
-			// const { _id, email, fullName, nim, programMBKM, skAcc, borangKonversi } =
-			// 	user;
-
 			res.status(200).json({
 				data: user,
 				token: generateToken(user._id),
@@ -112,26 +107,21 @@ controller.post(
 	})
 );
 
-//endpoint untuk melakukan register
+// REGISTER USER
 controller.post(
 	'/register',
 	asyncHandler(async (req, res, next) => {
-		// request ke server untuk dapatkan varibel ini
 		const { fullName, email, password } = req.body;
 
-		// cari satu user berdasarkan email
 		const userEmail = await AdminModel.findOne({ email });
 
-		// jika email user ada di db, jalankan ini
 		if (userEmail) {
 			res.status(402);
 			throw new Error('Email sudah digunakan!');
 		}
 
-		// buat model baru dan simpan kedalam variabel data
 		const user = new AdminModel({ fullName, email, password });
 
-		// tunggu modelnya di save
 		await user
 			.save()
 			.then((user) => {
@@ -144,7 +134,7 @@ controller.post(
 	})
 );
 
-// * DONE: endpoint untuk input matkul
+// INPUT SUBJECTS
 controller.post(
 	'/input-matkul/:id',
 	asyncHandler(async (req, res, next) => {
@@ -177,9 +167,8 @@ controller.post(
 	})
 );
 
-// TODO : isi rps
+// INPUT RPS/CPMK
 controller.post(
-	// '/input-rps/:idAdmin/:idMatkul',
 	'/input-rps/:idSubject',
 	asyncHandler(async (req, res, next) => {
 		const { idSubject } = req.params;
@@ -211,14 +200,13 @@ controller.post(
 	})
 );
 
-// endpoint untuk menghapus user dari db
+// DELETE USER
 controller.delete(
 	'/delete/:id',
 	asyncHandler(async (req, res, next) => {
 		const id = req.params.id;
 		const data = await AdminModel.findByIdAndDelete(id);
 
-		// data not found
 		if (!data) {
 			throw new Error('Not found!');
 		}
