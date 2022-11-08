@@ -67,6 +67,21 @@ controller.get(
 	})
 );
 
+// GET CPMKS BY ID
+controller.get(
+	'/getAll/cpmks/:id',
+	asyncHandler(async (req, res, next) => {
+		const { id } = req.params;
+		const data = await SubjectModel.findById(id).populate('_cpmks');
+
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+
+		res.status(200).json({ data: data });
+	})
+);
+
 // GET USER BY ID
 controller.get(
 	'/getOne/:id',

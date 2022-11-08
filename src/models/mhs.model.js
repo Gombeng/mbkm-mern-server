@@ -1,7 +1,19 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const { Schema, model } = mongoose;
+const { ObjectId } = Schema.Types;
 
-const AdminSchema = new mongoose.Schema(
+const BorangSchema = new Schema({
+	name: { type: String, required: true },
+	cpmks: [{ type: String }],
+
+	// * one subject only owned by one admin | one to one
+	_student: { type: ObjectId, ref: 'student' },
+});
+
+const BorangModel = model('borang', BorangSchema);
+
+const MhsSchema = new Schema(
 	{
 		nim: { type: String, required: true, unique: true },
 		fullName: { type: String, required: true },
@@ -10,12 +22,8 @@ const AdminSchema = new mongoose.Schema(
 		programMBKM: { type: String, default: null },
 		skAcc: { type: String, default: null },
 		logsheet: [{ type: String, default: null }],
-		// borangKonversi: [
-		// 	{
-		// 		name: { type: String, default: null },
-		// 		borang: { type: String, default: null },
-		// 	},
-		// ],
+
+		_borang: [{ type: ObjectId, ref: 'borang' }],
 		// resetPasswordToken: { type: String, default: null },
 		// resetPasswordExpires: { type: Date, default: null },
 	},
@@ -26,13 +34,14 @@ const AdminSchema = new mongoose.Schema(
 		},
 	}
 );
+const MhsModel = model('student', MhsSchema);
 
-AdminSchema.methods.matchPassword = async function (enteredPassword) {
+MhsSchema.methods.matchPassword = async function (enteredPassword) {
 	return await bcrypt.compare(enteredPassword, this.password);
 };
 
 // will encrypt password everytime its saved
-AdminSchema.pre('save', async function (next) {
+MhsSchema.pre('save', async function (next) {
 	if (!this.isModified('password')) {
 		next();
 	}
@@ -40,6 +49,4 @@ AdminSchema.pre('save', async function (next) {
 	this.password = await bcrypt.hash(this.password, salt);
 });
 
-const AdminModel = mongoose.model('student', AdminSchema);
-
-module.exports = AdminModel;
+module.exports = MhsModel;

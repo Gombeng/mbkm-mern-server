@@ -1,4 +1,4 @@
-const AdminModel = require('../models/mhs.model');
+const Mhsmodel = require('../models/mhs.model');
 const controller = require('express')();
 // gunakan modul ini supaya tidak perlu ribet return error
 const asyncHandler = require('express-async-handler');
@@ -10,7 +10,7 @@ controller.get(
 	'/getAll',
 	asyncHandler(async (req, res, next) => {
 		// ambil semua data mahasiswa yang ada di db
-		const data = await AdminModel.find();
+		const data = await Mhsmodel.find();
 
 		// data not found
 		if (!data) {
@@ -29,7 +29,7 @@ controller.get(
 	asyncHandler(async (req, res, next) => {
 		// jadi di sini nanti pas req.params.(harus sama dengan yang di ujung url)
 		const { id } = req.params;
-		const data = await AdminModel.findById(id);
+		const data = await Mhsmodel.findById(id);
 
 		// data not found
 		if (!data) {
@@ -49,7 +49,7 @@ controller.post(
 		const { email, password } = req.body;
 
 		// cari satu user berdasarkan email
-		const user = await AdminModel.findOne({ email });
+		const user = await Mhsmodel.findOne({ email });
 
 		if (!user) {
 			res.status(404);
@@ -81,8 +81,8 @@ controller.post(
 		const { nim, fullName, email, password } = req.body;
 
 		// cari satu user berdasarkan email
-		const userEmail = await AdminModel.findOne({ email });
-		const userNim = await AdminModel.findOne({ nim });
+		const userEmail = await Mhsmodel.findOne({ email });
+		const userNim = await Mhsmodel.findOne({ nim });
 
 		// jika email user ada di db, jalankan ini
 		if (userEmail) {
@@ -97,7 +97,7 @@ controller.post(
 		}
 
 		// buat model baru dan simpan kedalam variabel data
-		const user = new AdminModel({ nim, fullName, email, password });
+		const user = new Mhsmodel({ nim, fullName, email, password });
 
 		// tunggu modelnya di save
 		await user
@@ -135,7 +135,7 @@ controller.patch(
 		const { id } = req.params;
 		const image = req.file.path;
 		const options = { new: true };
-		const data = await AdminModel.findByIdAndUpdate(
+		const data = await Mhsmodel.findByIdAndUpdate(
 			id,
 			{ skAcc: image },
 			options
@@ -153,7 +153,7 @@ controller.post(
 		const { logsheet } = req.body;
 		const options = { new: false };
 
-		await AdminModel.findById(id)
+		await Mhsmodel.findById(id)
 			.then(async (data) => {
 				data.logsheet.push(logsheet);
 
@@ -166,12 +166,23 @@ controller.post(
 	})
 );
 
+controller.patch(
+	'/edit-profil/:id',
+	asyncHandler(async (req, res, next) => {
+		const { id } = req.params;
+		const options = { new: true };
+		const data = await Mhsmodel.findByIdAndUpdate(id, req.body, options);
+
+		res.status(200).send(data);
+	})
+);
+
 // endpoint untuk menghapus user dari db
 controller.delete(
 	'/delete/:id',
 	asyncHandler(async (req, res, next) => {
 		const id = req.params.id;
-		const data = await AdminModel.findByIdAndDelete(id);
+		const data = await Mhsmodel.findByIdAndDelete(id);
 
 		// data not found
 		if (!data) {
