@@ -1,10 +1,12 @@
 const routes = require('express')();
-const mhsController = require('../controllers/mhs.controller');
-const adminController = require('../controllers/admin.controller');
-const imgController = require('../controllers/img.controller');
+const {
+	mahasiswaController,
+	adminController,
+	passResetController,
+} = require('../controllers');
 
+routes.use('/student', mahasiswaController);
 routes.use('/admin', adminController);
-routes.use('/student', mhsController);
-routes.use('/image', imgController);
+routes.use('/password-reset', passResetController);
 
 module.exports = routes;

@@ -34,7 +34,6 @@ const { ObjectId } = Schema.Types;
 const CpmkSchema = new Schema({
 	code: { type: String, required: true },
 	name: { type: String, required: true },
-
 	// * one cpmk only owned by one subject | one to one
 	_subject: { type: ObjectId, ref: 'subject' },
 });
@@ -80,6 +79,11 @@ AdminSchema.pre('save', async function (next) {
 	const salt = await bcrypt.genSalt(10);
 	this.password = await bcrypt.hash(this.password, salt);
 });
+
+// AdminSchema.pre('remove', function (next) {
+// 	// Remove all the assignment docs that reference the removed person.
+// 	this.model('AdminModel').remove({ _subjects: this._id }, next);
+// });
 
 const AdminModel = model('admin', AdminSchema);
 

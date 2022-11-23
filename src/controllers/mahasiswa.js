@@ -1,16 +1,17 @@
-const Mhsmodel = require('../models/mhs.model');
 const controller = require('express')();
 // gunakan modul ini supaya tidak perlu ribet return error
 const asyncHandler = require('express-async-handler');
 const generateToken = require('../utils/generateToken');
 const upload = require('../utils/multerSetup');
+const { CpmkModel, SubjectModel } = require('../models/admin.model');
+const { MhsModel, AnswerModel, BorangModel } = require('../models/mahasiswa');
 
 //endpoint untuk mendapatkan semua user
 controller.get(
 	'/getAll',
 	asyncHandler(async (req, res, next) => {
 		// ambil semua data mahasiswa yang ada di db
-		const data = await Mhsmodel.find();
+		const data = await MhsModel.find();
 
 		// data not found
 		if (!data) {
@@ -29,7 +30,7 @@ controller.get(
 	asyncHandler(async (req, res, next) => {
 		// jadi di sini nanti pas req.params.(harus sama dengan yang di ujung url)
 		const { id } = req.params;
-		const data = await Mhsmodel.findById(id);
+		const data = await MhsModel.findById(id);
 
 		// data not found
 		if (!data) {
@@ -49,7 +50,7 @@ controller.post(
 		const { email, password } = req.body;
 
 		// cari satu user berdasarkan email
-		const user = await Mhsmodel.findOne({ email });
+		const user = await MhsModel.findOne({ email });
 
 		if (!user) {
 			res.status(404);
@@ -81,8 +82,8 @@ controller.post(
 		const { nim, fullName, email, password } = req.body;
 
 		// cari satu user berdasarkan email
-		const userEmail = await Mhsmodel.findOne({ email });
-		const userNim = await Mhsmodel.findOne({ nim });
+		const userEmail = await MhsModel.findOne({ email });
+		const userNim = await MhsModel.findOne({ nim });
 
 		// jika email user ada di db, jalankan ini
 		if (userEmail) {
@@ -97,22 +98,12 @@ controller.post(
 		}
 
 		// buat model baru dan simpan kedalam variabel data
-		const user = new Mhsmodel({ nim, fullName, email, password });
+		const user = new MhsModel({ nim, fullName, email, password });
 
 		// tunggu modelnya di save
 		await user
 			.save()
 			.then((user) => {
-				// const {
-				// 	_id,
-				// 	email,
-				// 	fullName,
-				// 	nim,
-				// 	programMBKM,
-				// 	skAcc,
-				// 	borangKonversi,
-				// } = user;
-
 				res.status(200).json({
 					data: user,
 					token: generateToken(user._id),
@@ -135,7 +126,7 @@ controller.patch(
 		const { id } = req.params;
 		const image = req.file.path;
 		const options = { new: true };
-		const data = await Mhsmodel.findByIdAndUpdate(
+		const data = await MhsModel.findByIdAndUpdate(
 			id,
 			{ skAcc: image },
 			options
@@ -153,7 +144,7 @@ controller.post(
 		const { logsheet } = req.body;
 		const options = { new: false };
 
-		await Mhsmodel.findById(id)
+		await MhsModel.findById(id)
 			.then(async (data) => {
 				data.logsheet.push(logsheet);
 
@@ -166,12 +157,125 @@ controller.post(
 	})
 );
 
+// * ENDPOINT INPUT BORANG
+controller.get(
+	'/getAll/borangs',
+	asyncHandler(async (req, res, next) => {
+		const data = await BorangModel.find();
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+		res.status(200).json(data);
+	})
+);
+
+controller.get(
+	'/getOne/borangs/:id',
+	asyncHandler(async (req, res, next) => {
+		const { id } = req.params;
+		const data = await BorangModel.findById(id);
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+		res.status(200).json(data);
+	})
+);
+
+controller.get(
+	'/borangs/:id',
+	asyncHandler(async (req, res, next) => {
+		const { id } = req.params;
+		const data = await MhsModel.findById(id).populate('_borangs');
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+		res.status(200).json(data);
+	})
+);
+
+controller.get(
+	'/getAll/borangs/:id/answers',
+	asyncHandler(async (req, res, next) => {
+		const { id } = req.params;
+		const data = await BorangModel.findById(id).populate('_answers');
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+		res.status(200).json(data);
+	})
+);
+
+controller.post(
+	'/buat-borang/:id',
+	asyncHandler(async (req, res, next) => {
+		const { id } = req.params;
+		const { subject } = req.body;
+		await MhsModel.findById(id)
+			.then((mhs) => {
+				const newBorang = new BorangModel(req.body);
+				newBorang._student = mhs._id;
+				mhs._borangs.push(newBorang);
+				mhs
+					.save()
+					.then((data) => {
+						newBorang
+							.save()
+							.then((data) => {
+								res.status(200).json({
+									data: data,
+								});
+							})
+							.catch((err) => {
+								next(err);
+							});
+					})
+					.catch((err) => {
+						next(err);
+					});
+			})
+			.catch((err) => next(err));
+	})
+);
+
+controller.post(
+	'/isi-cpmk/:id',
+	asyncHandler(async (req, res, next) => {
+		const { id } = req.params;
+
+		await BorangModel.findById(id)
+			.then((borang) => {
+				const newAnswer = new AnswerModel(req.body);
+				// newAnswer._subject = subject._id;
+				borang._answers.push(newAnswer);
+				borang
+					.save()
+					.then((data) => {
+						newAnswer
+							.save()
+							.then((data) => {
+								res.status(200).json({
+									data: data,
+								});
+							})
+							.catch((err) => {
+								next(err);
+							});
+					})
+					.catch((err) => {
+						next(err);
+					});
+			})
+			.catch((err) => next(err));
+	})
+);
+
+// ! ENDPOINT UPDATE INFO MAHASISWA
 controller.patch(
 	'/edit-profil/:id',
 	asyncHandler(async (req, res, next) => {
 		const { id } = req.params;
 		const options = { new: true };
-		const data = await Mhsmodel.findByIdAndUpdate(id, req.body, options);
+		const data = await MhsModel.findByIdAndUpdate(id, req.body, options);
 
 		res.status(200).send(data);
 	})
@@ -182,7 +286,7 @@ controller.delete(
 	'/delete/:id',
 	asyncHandler(async (req, res, next) => {
 		const id = req.params.id;
-		const data = await Mhsmodel.findByIdAndDelete(id);
+		const data = await MhsModel.findByIdAndDelete(id);
 
 		// data not found
 		if (!data) {

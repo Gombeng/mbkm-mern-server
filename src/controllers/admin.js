@@ -67,7 +67,37 @@ controller.get(
 	})
 );
 
-// GET CPMKS BY ID
+// Get subject by name
+controller.get(
+	'/getOne/subjects/:name',
+	asyncHandler(async (req, res, next) => {
+		const { name } = req.params;
+		const data = await SubjectModel.find({ name }).populate('_cpmks');
+
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+
+		res.status(200).json({ data: data });
+	})
+);
+
+// GET CPMK BY ID
+controller.get(
+	'/getAll/cpmk/:id',
+	asyncHandler(async (req, res, next) => {
+		const { id } = req.params;
+		const data = await CpmkModel.findById(id);
+
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+
+		res.status(200).json({ data: data });
+	})
+);
+
+// GET CPMKS BY ID MATKUL
 controller.get(
 	'/getAll/cpmks/:id',
 	asyncHandler(async (req, res, next) => {

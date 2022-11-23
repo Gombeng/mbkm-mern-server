@@ -3,12 +3,17 @@ const bcrypt = require('bcrypt');
 const { Schema, model } = mongoose;
 const { ObjectId } = Schema.Types;
 
-const BorangSchema = new Schema({
-	name: { type: String, required: true },
-	cpmks: [{ type: String }],
+const AnswerSchema = new Schema({
+	name: { type: String, default: null },
+	answer: { type: String, default: null },
+});
 
-	// * one subject only owned by one admin | one to one
+const AnswerModel = model('answer', AnswerSchema);
+
+const BorangSchema = new Schema({
+	subject: { type: String, default: null },
 	_student: { type: ObjectId, ref: 'student' },
+	_answers: [{ type: ObjectId, ref: 'answer', default: null }],
 });
 
 const BorangModel = model('borang', BorangSchema);
@@ -22,8 +27,7 @@ const MhsSchema = new Schema(
 		programMBKM: { type: String, default: null },
 		skAcc: { type: String, default: null },
 		logsheet: [{ type: String, default: null }],
-
-		_borang: [{ type: ObjectId, ref: 'borang' }],
+		_borangs: [{ type: ObjectId, ref: 'borang' }],
 		// resetPasswordToken: { type: String, default: null },
 		// resetPasswordExpires: { type: Date, default: null },
 	},
@@ -34,7 +38,6 @@ const MhsSchema = new Schema(
 		},
 	}
 );
-const MhsModel = model('student', MhsSchema);
 
 MhsSchema.methods.matchPassword = async function (enteredPassword) {
 	return await bcrypt.compare(enteredPassword, this.password);
@@ -49,4 +52,6 @@ MhsSchema.pre('save', async function (next) {
 	this.password = await bcrypt.hash(this.password, salt);
 });
 
-module.exports = MhsModel;
+const MhsModel = model('student', MhsSchema);
+
+module.exports = { MhsModel, BorangModel, AnswerModel };

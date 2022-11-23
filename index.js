@@ -20,20 +20,18 @@ app.use((error, req, res, next) => {
 	res.status(status).json({ message, data });
 });
 
-const PORT = process.env.PORT || 5000;
-const DB = process.env.DB;
-const options = {
+const { DB, PORT } = process.env;
+const connectionParams = {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 };
 
 mongoose
-	.connect(DB, options)
+	.connect(DB, connectionParams)
 	.then(() => {
 		app.listen(PORT, () => {
-			console.log(`🔥 Server running on http://localhost:${PORT} 🔥`);
+			console.log(`🔥 http://localhost:${PORT}`);
 		});
-
 		app.get('/', (req, res) => {
 			res.send(`Hello World 🔥🔥🔥`);
 		});
