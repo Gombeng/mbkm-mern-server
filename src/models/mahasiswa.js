@@ -12,8 +12,8 @@ const AnswerModel = model('answer', AnswerSchema);
 
 const BorangSchema = new Schema({
 	subject: { type: String, default: null },
-	_student: { type: ObjectId, ref: 'student' },
-	_answers: [{ type: ObjectId, ref: 'answer', default: null }],
+	idStudent: { type: ObjectId, ref: 'student' },
+	idAnswers: [{ type: ObjectId, ref: 'answer' }],
 });
 
 const BorangModel = model('borang', BorangSchema);
@@ -27,7 +27,7 @@ const MhsSchema = new Schema(
 		programMBKM: { type: String, default: null },
 		skAcc: { type: String, default: null },
 		logsheet: [{ type: String, default: null }],
-		_borangs: [{ type: ObjectId, ref: 'borang' }],
+		idBorangs: [{ type: ObjectId, ref: 'borang' }],
 		// resetPasswordToken: { type: String, default: null },
 		// resetPasswordExpires: { type: Date, default: null },
 	},

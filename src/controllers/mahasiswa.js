@@ -6,63 +6,48 @@ const upload = require('../utils/multerSetup');
 const { CpmkModel, SubjectModel } = require('../models/admin.model');
 const { MhsModel, AnswerModel, BorangModel } = require('../models/mahasiswa');
 
-//endpoint untuk mendapatkan semua user
+/*
+ * endpoint untuk mendapatkan semua mahasiswa
+ */
 controller.get(
 	'/getAll',
 	asyncHandler(async (req, res, next) => {
-		// ambil semua data mahasiswa yang ada di db
 		const data = await MhsModel.find();
-
-		// data not found
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
-
-		// respon dari server berupa data mahasiswa
-		res.status(200).json(data);
+		res.status(200).json({ data });
 	})
 );
 
-// endpoint untuk mendapatkan satu user berdasarkan id
+/*
+ * endpoint untuk mendapatkan mahasiswa berdasarkan id nya
+ */
 controller.get(
-	// get data berdasarkan id, lihat ujung urlnya :id
-	'/getOne/:id',
+	'/getOne/:idMahasiswa',
 	asyncHandler(async (req, res, next) => {
-		// jadi di sini nanti pas req.params.(harus sama dengan yang di ujung url)
-		const { id } = req.params;
-		const data = await MhsModel.findById(id);
-
-		// data not found
+		const { idMahasiswa } = req.params;
+		const data = await MhsModel.findById(idMahasiswa);
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
-
-		// respon dari server berupa data mahasiswa
-		res.status(200).json(data);
+		res.status(200).json({ data });
 	})
 );
 
-//endpoint untuk melakukan login
+/*
+ * endpoint untuk melaukan login mahasiswa
+ */
 controller.post(
 	'/login',
 	asyncHandler(async (req, res, next) => {
-		// request ke server untuk dapatkan varibel ini
 		const { email, password } = req.body;
-
-		// cari satu user berdasarkan email
 		const user = await MhsModel.findOne({ email });
-
 		if (!user) {
 			res.status(404);
 			throw new Error('Pengguna tidak ditemukan!');
 		}
-
-		// jika user ada dan password = dengan yang di db, jalankan ini
 		if (user && (await user.matchPassword(password))) {
-			// dapatkan respon balik berformat json dari server berisi data ini
-			// const { _id, email, fullName, nim, programMBKM, skAcc, borangKonversi } =
-			// 	user;
-
 			res.status(200).json({
 				data: user,
 				token: generateToken(user._id),
@@ -73,34 +58,24 @@ controller.post(
 		}
 	})
 );
-
-//endpoint untuk melakukan register
+/*
+ * endpoint untuk melakukan register mahasiswa
+ */
 controller.post(
 	'/register',
 	asyncHandler(async (req, res, next) => {
-		// request ke server untuk dapatkan varibel ini
 		const { nim, fullName, email, password } = req.body;
-
-		// cari satu user berdasarkan email
 		const userEmail = await MhsModel.findOne({ email });
 		const userNim = await MhsModel.findOne({ nim });
-
-		// jika email user ada di db, jalankan ini
 		if (userEmail) {
 			res.status(402);
 			throw new Error('Email sudah digunakan!');
 		}
-
-		// jika nim user ada di db, jalankan ini
 		if (userNim) {
 			res.status(402);
 			throw new Error('Nim sudah digunakan!');
 		}
-
-		// buat model baru dan simpan kedalam variabel data
 		const user = new MhsModel({ nim, fullName, email, password });
-
-		// tunggu modelnya di save
 		await user
 			.save()
 			.then((user) => {
@@ -113,51 +88,54 @@ controller.post(
 	})
 );
 
-// endpoint untuk upload sk acc
+/*
+ * endpoint untuk upload surat keterangan diterima mitra
+ */
 controller.patch(
-	'/upload/:id',
-	// jangan lupa pasang middleware ini
+	'/sk-mitra/:idMahasiswa',
+	// Todo: jangan lupa pasang middleware ini
 	upload,
 	asyncHandler(async (req, res, next) => {
+		const { idMahasiswa } = req.params;
+		const image = req.file.path;
+		const options = { new: true };
 		if (!req.file) {
 			throw new Error('Select an image!');
 		}
-
-		const { id } = req.params;
-		const image = req.file.path;
-		const options = { new: true };
 		const data = await MhsModel.findByIdAndUpdate(
-			id,
+			idMahasiswa,
 			{ skAcc: image },
 			options
 		);
-
-		res.status(200).send(data);
+		res.status(200).send({ data });
 	})
 );
 
-// endpoint untuk upload logsheet harian
+/*
+ * endpoint untuk upload logsheet/logbook harian mahasiswa
+ */
 controller.post(
-	'/upload-logsheet/:id',
+	'/upload-logsheet/:idMahasiswa',
 	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
+		const { idMahasiswa } = req.params;
 		const { logsheet } = req.body;
 		const options = { new: false };
 
-		await MhsModel.findById(id)
-			.then(async (data) => {
-				data.logsheet.push(logsheet);
-
-				await data
+		await MhsModel.findById(idMahasiswa)
+			.then(async (mahasiswa) => {
+				mahasiswa.logsheet.push(logsheet);
+				await mahasiswa
 					.save()
-					.then((data) => res.status(200).send(data))
+					.then((data) => res.status(200).send({ data }))
 					.catch((err) => next(err));
 			})
 			.catch((err) => next(err));
 	})
 );
 
-// * ENDPOINT INPUT BORANG
+/*
+ * endpoint untuk mendapatkan semua borang yang sudah diupload mahasiswa
+ */
 controller.get(
 	'/getAll/borangs',
 	asyncHandler(async (req, res, next) => {
@@ -165,65 +143,75 @@ controller.get(
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
-		res.status(200).json(data);
+		res.status(200).json({ data });
 	})
 );
 
+/*
+ * endpoint untuk mendapatkan satu borang berdasarkan id borang
+ */
 controller.get(
-	'/getOne/borangs/:id',
+	'/getOne/borangs/:idBorang',
 	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
-		const data = await BorangModel.findById(id);
+		const { idBorang } = req.params;
+		const data = await BorangModel.findById(idBorang);
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
-		res.status(200).json(data);
+		res.status(200).json({ data });
 	})
 );
 
+/*
+ * endpoint untuk mendapatkan semua borang berdasarkan id mahasiswa (populate)
+ */
 controller.get(
-	'/borangs/:id',
+	'/student-borangs/:idMahasiswa',
 	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
-		const data = await MhsModel.findById(id).populate('_borangs');
+		const { idMahasiswa } = req.params;
+		const data = await MhsModel.findById(idMahasiswa).populate('idBorangs');
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
-		res.status(200).json(data);
+		res.status(200).json({ data });
 	})
 );
 
+/*
+ * endpoint untuk mendapatkan answer di semua borang berdasarkan id mahasiswa
+ */
 controller.get(
-	'/getAll/borangs/:id/answers',
+	'/getAll/borangs/answers/:idStudent',
 	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
-		const data = await BorangModel.findById(id).populate('_answers');
+		const { idStudent } = req.params;
+		const data = await BorangModel.findById(idStudent).populate('idAnswers');
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
-		res.status(200).json(data);
+		res.status(200).json({ data });
 	})
 );
 
+/*
+ * endpoint untuk membuat borang baru di satu mahasiswa
+ */
 controller.post(
-	'/buat-borang/:id',
+	'/buat-borang/:idStudent',
 	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
+		const { idStudent } = req.params;
 		const { subject } = req.body;
-		await MhsModel.findById(id)
+		await MhsModel.findById(idStudent)
 			.then((mhs) => {
 				const newBorang = new BorangModel(req.body);
-				newBorang._student = mhs._id;
-				mhs._borangs.push(newBorang);
+				newBorang.idStudent = mhs._id;
+				mhs.idBorangs.push(newBorang);
 				mhs
 					.save()
 					.then((data) => {
 						newBorang
 							.save()
 							.then((data) => {
-								res.status(200).json({
-									data: data,
-								});
+								res.status(200).json({ data });
 							})
 							.catch((err) => {
 								next(err);
@@ -237,25 +225,25 @@ controller.post(
 	})
 );
 
-controller.post(
-	'/isi-cpmk/:id',
-	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
+/*
+ * endpoint untuk mengisi answer berdasarkan id borang
+ */
 
-		await BorangModel.findById(id)
+controller.post(
+	'/isi-cpmk/:idBorang',
+	asyncHandler(async (req, res, next) => {
+		const { idBorang } = req.params;
+		await BorangModel.findById(idBorang)
 			.then((borang) => {
 				const newAnswer = new AnswerModel(req.body);
-				// newAnswer._subject = subject._id;
-				borang._answers.push(newAnswer);
+				borang.idAnswers.push(newAnswer);
 				borang
 					.save()
 					.then((data) => {
 						newAnswer
 							.save()
 							.then((data) => {
-								res.status(200).json({
-									data: data,
-								});
+								res.status(200).json({ data });
 							})
 							.catch((err) => {
 								next(err);
@@ -269,26 +257,48 @@ controller.post(
 	})
 );
 
-// ! ENDPOINT UPDATE INFO MAHASISWA
-controller.patch(
-	'/edit-profil/:id',
+/*
+ * endpoint untuk menghapus answer berdasarkan id nya
+ */
+controller.delete(
+	'/hapus-cpmk/:idAnswer',
 	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
-		const options = { new: true };
-		const data = await MhsModel.findByIdAndUpdate(id, req.body, options);
-
-		res.status(200).send(data);
+		const { idAnswer } = req.params;
+		await AnswerModel.findByIdAndDelete(idAnswer)
+			.then((data) => {
+				res.status(200).json({ data });
+			})
+			.catch((error) => {
+				next(error);
+			});
 	})
 );
 
-// endpoint untuk menghapus user dari db
-controller.delete(
-	'/delete/:id',
+/*
+ * endpoint untuk update/edit info mahasiswa
+ */
+controller.patch(
+	'/edit-profil/:idMahasiswa',
 	asyncHandler(async (req, res, next) => {
-		const id = req.params.id;
-		const data = await MhsModel.findByIdAndDelete(id);
+		const { idMahasiswa } = req.params;
+		const options = { new: true };
+		const data = await MhsModel.findByIdAndUpdate(
+			idMahasiswa,
+			req.body,
+			options
+		);
+		res.status(200).send({ data });
+	})
+);
 
-		// data not found
+/*
+ * endpoint untuk menghapus satu mahasiswa
+ */
+controller.delete(
+	'/hapus-student/:idStudent',
+	asyncHandler(async (req, res, next) => {
+		const { idStudent } = req.params;
+		const data = await MhsModel.findByIdAndDelete(idStudent);
 		if (!data) {
 			throw new Error('Not found!');
 		}
