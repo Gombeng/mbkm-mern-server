@@ -4,142 +4,52 @@ const {
 	CpmkModel,
 } = require('../models/admin.model');
 const controller = require('express')();
-// gunakan modul ini supaya tidak perlu ribet return error
 const asyncHandler = require('express-async-handler');
 const generateToken = require('../utils/generateToken');
 const upload = require('../utils/multerSetup');
 const mongoose = require('mongoose');
 
-// GET ALL ADMIN
+/*
+ * endpoint untuk mendapatkan semua admin
+ */
 controller.get(
-	'/getAll',
+	'/',
 	asyncHandler(async (req, res, next) => {
 		const data = await AdminModel.find();
-
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
-
-		res.status(200).json({ data: data });
+		res.status(200).json({ data });
 	})
 );
 
-// GET ALL SUBJECTS
+/*
+ * endpoint untuk mendapatkan satu admin
+ */
 controller.get(
-	'/getAll/subjects',
+	'/:idAdmin',
 	asyncHandler(async (req, res, next) => {
-		const data = await AdminModel.find().populate('_subjects');
-
+		const { idAdmin } = req.params;
+		const data = await AdminModel.findById(idAdmin);
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
-
-		res.status(200).json({ data: data });
+		res.status(200).json({ data });
 	})
 );
 
-// GET ALL ONE USER SUBJECTS
-controller.get(
-	'/getAll/subjects/:id',
-	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
-		const data = await AdminModel.findById(id).populate('_subjects');
-
-		if (!data) {
-			throw new Error('Gagal memuat data!');
-		}
-
-		res.status(200).json({ data: data });
-	})
-);
-
-// GET ALL CPMKS
-controller.get(
-	'/getAll/cpmks',
-	asyncHandler(async (req, res, next) => {
-		const data = await SubjectModel.find().populate('_cpmks');
-
-		if (!data) {
-			throw new Error('Gagal memuat data!');
-		}
-
-		res.status(200).json({ data: data });
-	})
-);
-
-// Get subject by name
-controller.get(
-	'/getOne/subjects/:name',
-	asyncHandler(async (req, res, next) => {
-		const { name } = req.params;
-		const data = await SubjectModel.find({ name }).populate('_cpmks');
-
-		if (!data) {
-			throw new Error('Gagal memuat data!');
-		}
-
-		res.status(200).json({ data: data });
-	})
-);
-
-// GET CPMK BY ID
-controller.get(
-	'/getAll/cpmk/:id',
-	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
-		const data = await CpmkModel.findById(id);
-
-		if (!data) {
-			throw new Error('Gagal memuat data!');
-		}
-
-		res.status(200).json({ data: data });
-	})
-);
-
-// GET CPMKS BY ID MATKUL
-controller.get(
-	'/getAll/cpmks/:id',
-	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
-		const data = await SubjectModel.findById(id).populate('_cpmks');
-
-		if (!data) {
-			throw new Error('Gagal memuat data!');
-		}
-
-		res.status(200).json({ data: data });
-	})
-);
-
-// GET USER BY ID
-controller.get(
-	'/getOne/:id',
-	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
-		const data = await AdminModel.findById(id);
-
-		if (!data) {
-			throw new Error('Gagal memuat data!');
-		}
-
-		res.status(200).json({ data: data });
-	})
-);
-
-// LOGIN USER
+/*
+ * endpoint untuk login admin
+ */
 controller.post(
 	'/login',
 	asyncHandler(async (req, res, next) => {
 		const { email, password } = req.body;
-
 		const user = await AdminModel.findOne({ email });
-
 		if (!user) {
 			res.status(404);
 			throw new Error('Pengguna tidak ditemukan!');
 		}
-
 		if (user && (await user.matchPassword(password))) {
 			res.status(200).json({
 				data: user,
@@ -152,53 +62,139 @@ controller.post(
 	})
 );
 
-// REGISTER USER
+/*
+ * endpoint untuk register admin
+ */
 controller.post(
 	'/register',
 	asyncHandler(async (req, res, next) => {
 		const { fullName, email, password } = req.body;
-
 		const userEmail = await AdminModel.findOne({ email });
-
 		if (userEmail) {
 			res.status(402);
 			throw new Error('Email sudah digunakan!');
 		}
-
 		const user = new AdminModel({ fullName, email, password });
-
 		await user
 			.save()
-			.then((user) => {
+			.then((data) => {
 				res.status(200).json({
-					data: user,
-					token: generateToken(user._id),
+					data,
+					token: generateToken(data._id),
 				});
 			})
 			.catch((error) => next(error));
 	})
 );
 
-// INPUT SUBJECTS
-controller.post(
-	'/input-matkul/:id',
+/*
+ * endpoint untuk mendapatkan semua mata kuliah (populate)
+ */
+controller.get(
+	'/subjects',
 	asyncHandler(async (req, res, next) => {
-		const { id } = req.params;
+		const data = await AdminModel.find().populate('idSubjects');
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+		res.status(200).json({ data });
+	})
+);
 
-		await AdminModel.findById(id)
+/*
+ * endpoint untuk mendapatkan semua mata kuliah satu dosen (pupulate)
+ */
+controller.get(
+	'/subjects/:idAdmin',
+	asyncHandler(async (req, res, next) => {
+		const { idAdmin } = req.params;
+		const data = await AdminModel.findById(idAdmin).populate('idSubjects');
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+		res.status(200).json({ data });
+	})
+);
+
+/*
+ * endpoint untuk mendapatkan semua cpmk di semua mata kuliah (populate)
+ */
+controller.get(
+	'/getAll/cpmks',
+	asyncHandler(async (req, res, next) => {
+		const data = await SubjectModel.find().populate('idCpmks');
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+		res.status(200).json({ data });
+	})
+);
+
+/*
+ * endpoint untuk mendapatkan semua cpmk di satu mata kuliah (populate)
+ */
+controller.get(
+	'/getOne/subjects/:name',
+	asyncHandler(async (req, res, next) => {
+		const { name } = req.params;
+		const data = await SubjectModel.find({ name: name }).populate('idCpmks');
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+		res.status(200).json({ data });
+	})
+);
+
+/*
+ * endpoint untuk mendapatkan satu cpmk
+ */
+controller.get(
+	'/cpmks/:idCpmk',
+	asyncHandler(async (req, res, next) => {
+		const { idCpmk } = req.params;
+		const data = await CpmkModel.findById(idCpmk);
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+		res.status(200).json({ data });
+	})
+);
+
+/*
+ * endpoint untuk mendapatkan semua cpmk di satu mata kuliah (populate)
+ */
+controller.get(
+	'/cpmks/:idSubject',
+	asyncHandler(async (req, res, next) => {
+		const { idSubject } = req.params;
+		const data = await SubjectModel.findById(idSubject).populate('idCpmks');
+		if (!data) {
+			throw new Error('Gagal memuat data!');
+		}
+		res.status(200).json({ data });
+	})
+);
+
+/*
+ * endpoint untuk input mata kuliah
+ */
+controller.post(
+	'/input-matkul/:idAdmin',
+	asyncHandler(async (req, res, next) => {
+		const { idAdmin } = req.params;
+
+		await AdminModel.findById(idAdmin)
 			.then((admin) => {
 				const newSubject = new SubjectModel(req.body);
-				newSubject._admin = admin._id;
-				admin._subjects.push(newSubject);
+				newSubject.idAdmin = admin._id;
+				admin.idSubjects.push(newSubject);
 				admin
 					.save()
 					.then((data) => {
 						newSubject
 							.save()
 							.then((data) => {
-								res.status(200).json({
-									data: data,
-								});
+								res.status(200).json({ data });
 							})
 							.catch((err) => {
 								next(err);
@@ -212,7 +208,9 @@ controller.post(
 	})
 );
 
-// INPUT RPS/CPMK
+/*
+ * endpoint untuk input rps atau cpmk
+ */
 controller.post(
 	'/input-rps/:idSubject',
 	asyncHandler(async (req, res, next) => {
@@ -221,17 +219,15 @@ controller.post(
 		await SubjectModel.findById(idSubject)
 			.then((subject) => {
 				const newCpmk = new CpmkModel(req.body);
-				newCpmk._subject = subject._id;
-				subject._cpmks.push(newCpmk);
+				newCpmk.idSubject = subject._id;
+				subject.idCpmks.push(newCpmk);
 				subject
 					.save()
 					.then((data) => {
 						newCpmk
 							.save()
 							.then((data) => {
-								res.status(200).json({
-									data: data,
-								});
+								res.status(200).json({ data });
 							})
 							.catch((err) => {
 								next(err);
@@ -245,12 +241,50 @@ controller.post(
 	})
 );
 
-// DELETE USER
+/*
+ * endpoint untuk hapus rps
+ */
 controller.delete(
-	'/delete/:id',
+	'/hapus-cpmk/:idCpmk',
 	asyncHandler(async (req, res, next) => {
-		const id = req.params.id;
-		const data = await AdminModel.findByIdAndDelete(id);
+		const { idCpmk } = req.params;
+		const data = await CpmkModel.findByIdAndDelete(idCpmk);
+
+		if (!data) {
+			throw new Error('Not found!');
+		}
+		res.status(200).json({
+			message: `User dengan nama: ${data.name}, telah dihapus`,
+		});
+	})
+);
+
+/*
+ * endpoint untuk hapus subject
+ */
+controller.delete(
+	'/hapus-subject/:idSubject',
+	asyncHandler(async (req, res, next) => {
+		const { idSubject } = req.params;
+		const data = await SubjectModel.findByIdAndDelete(idSubject);
+
+		if (!data) {
+			throw new Error('Not found!');
+		}
+		res.status(200).json({
+			message: `User dengan nama: ${data.name}, telah dihapus`,
+		});
+	})
+);
+
+/*
+ * endpoint untuk hapus admin
+ */
+controller.delete(
+	'/delete/:idAdmin',
+	asyncHandler(async (req, res, next) => {
+		const { idAdmin } = req.params;
+		const data = await AdminModel.findByIdAndDelete(idAdmin);
 
 		if (!data) {
 			throw new Error('Not found!');

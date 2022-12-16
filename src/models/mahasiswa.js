@@ -3,6 +3,12 @@ const bcrypt = require('bcrypt');
 const { Schema, model } = mongoose;
 const { ObjectId } = Schema.Types;
 
+const accEnum = Object.freeze({
+	acc: 'Diterima',
+	pending: 'Ditinjau',
+	decline: 'Ditolak',
+});
+
 const AnswerSchema = new Schema({
 	name: { type: String, default: null },
 	answer: { type: String, default: null },
@@ -14,6 +20,7 @@ const BorangSchema = new Schema({
 	subject: { type: String, default: null },
 	idStudent: { type: ObjectId, ref: 'student' },
 	idAnswers: [{ type: ObjectId, ref: 'answer' }],
+	status: { type: String, enum: accEnum, default: accEnum.pending },
 });
 
 const BorangModel = model('borang', BorangSchema);
@@ -54,4 +61,4 @@ MhsSchema.pre('save', async function (next) {
 
 const MhsModel = model('student', MhsSchema);
 
-module.exports = { MhsModel, BorangModel, AnswerModel };
+module.exports = { MhsModel, BorangModel, AnswerModel, accEnum };

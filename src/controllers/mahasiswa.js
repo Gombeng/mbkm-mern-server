@@ -4,13 +4,18 @@ const asyncHandler = require('express-async-handler');
 const generateToken = require('../utils/generateToken');
 const upload = require('../utils/multerSetup');
 const { CpmkModel, SubjectModel } = require('../models/admin.model');
-const { MhsModel, AnswerModel, BorangModel } = require('../models/mahasiswa');
+const {
+	MhsModel,
+	AnswerModel,
+	BorangModel,
+	accEnum,
+} = require('../models/mahasiswa');
 
 /*
  * endpoint untuk mendapatkan semua mahasiswa
  */
 controller.get(
-	'/getAll',
+	'/',
 	asyncHandler(async (req, res, next) => {
 		const data = await MhsModel.find();
 		if (!data) {
@@ -24,7 +29,7 @@ controller.get(
  * endpoint untuk mendapatkan mahasiswa berdasarkan id nya
  */
 controller.get(
-	'/getOne/:idMahasiswa',
+	'/:idMahasiswa',
 	asyncHandler(async (req, res, next) => {
 		const { idMahasiswa } = req.params;
 		const data = await MhsModel.findById(idMahasiswa);
@@ -134,7 +139,7 @@ controller.post(
 );
 
 /*
- * endpoint untuk mendapatkan semua borang yang sudah diupload mahasiswa
+ * endpoint untuk mendapatkan semua borang mahasiswa
  */
 controller.get(
 	'/getAll/borangs',
@@ -151,7 +156,7 @@ controller.get(
  * endpoint untuk mendapatkan satu borang berdasarkan id borang
  */
 controller.get(
-	'/getOne/borangs/:idBorang',
+	'/borangs/:idBorang',
 	asyncHandler(async (req, res, next) => {
 		const { idBorang } = req.params;
 		const data = await BorangModel.findById(idBorang);
@@ -169,7 +174,13 @@ controller.get(
 	'/student-borangs/:idMahasiswa',
 	asyncHandler(async (req, res, next) => {
 		const { idMahasiswa } = req.params;
-		const data = await MhsModel.findById(idMahasiswa).populate('idBorangs');
+		const data = await MhsModel.findById(idMahasiswa).populate({
+			path: 'idBorangs',
+			populate: {
+				path: 'idAnswers',
+				model: 'answer',
+			},
+		});
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
@@ -178,17 +189,77 @@ controller.get(
 );
 
 /*
- * endpoint untuk mendapatkan answer di semua borang berdasarkan id mahasiswa
+ * endpoint untuk mendapatkan answer di semua borang berdasarkan id borang
  */
 controller.get(
-	'/getAll/borangs/answers/:idStudent',
+	'/borangs/answers/:idBorang',
 	asyncHandler(async (req, res, next) => {
-		const { idStudent } = req.params;
-		const data = await BorangModel.findById(idStudent).populate('idAnswers');
+		const { idBorang } = req.params;
+		const data = await BorangModel.findById(idBorang).populate('idAnswers');
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
 		res.status(200).json({ data });
+	})
+);
+
+/*
+ * endpoint untuk membuat acc borang
+ */
+controller.post(
+	'/acc-borang/:idBorang',
+	asyncHandler(async (req, res, next) => {
+		const { idBorang } = req.params;
+		await BorangModel.findById(idBorang)
+			.then((borang) => {
+				borang.status = accEnum.acc;
+				borang
+					.save()
+					.then((data) => {
+						newBorang
+							.save()
+							.then((data) => {
+								res.status(200).json({ data });
+							})
+							.catch((err) => {
+								next(err);
+							});
+					})
+					.catch((err) => {
+						next(err);
+					});
+			})
+			.catch((err) => next(err));
+	})
+);
+
+/*
+ * endpoint untuk membuat acc borang
+ */
+controller.post(
+	'/dec-borang/:idBorang',
+	asyncHandler(async (req, res, next) => {
+		const { idBorang } = req.params;
+		await BorangModel.findById(idBorang)
+			.then((borang) => {
+				borang.status = accEnum.decline;
+				borang
+					.save()
+					.then((data) => {
+						newBorang
+							.save()
+							.then((data) => {
+								res.status(200).json({ data });
+							})
+							.catch((err) => {
+								next(err);
+							});
+					})
+					.catch((err) => {
+						next(err);
+					});
+			})
+			.catch((err) => next(err));
 	})
 );
 
@@ -228,7 +299,6 @@ controller.post(
 /*
  * endpoint untuk mengisi answer berdasarkan id borang
  */
-
 controller.post(
 	'/isi-cpmk/:idBorang',
 	asyncHandler(async (req, res, next) => {
