@@ -22,8 +22,9 @@ const SubjectModel = model('subject', SubjectSchema);
 
 const AdminSchema = new Schema(
 	{
-		fullName: { type: String, required: true },
-		email: { type: String, required: true, unique: true },
+		fullName: { type: String },
+		nip: { type: String, unique: true },
+		email: { type: String, unique: true },
 		password: { type: String, required: true },
 		idSubjects: [{ type: ObjectId, ref: 'subject' }],
 	},

@@ -32,7 +32,13 @@ controller.get(
 	'/:idMahasiswa',
 	asyncHandler(async (req, res, next) => {
 		const { idMahasiswa } = req.params;
-		const data = await MhsModel.findById(idMahasiswa);
+		const data = await MhsModel.findById(idMahasiswa).populate({
+			path: 'idBorangs',
+			populate: {
+				path: 'idAnswers',
+				model: 'answer',
+			},
+		});
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
@@ -102,6 +108,7 @@ controller.patch(
 	upload,
 	asyncHandler(async (req, res, next) => {
 		const { idMahasiswa } = req.params;
+		const { programMbkm } = req.body;
 		const image = req.file.path;
 		const options = { new: true };
 		if (!req.file) {
@@ -109,7 +116,7 @@ controller.patch(
 		}
 		const data = await MhsModel.findByIdAndUpdate(
 			idMahasiswa,
-			{ skAcc: image },
+			{ skAcc: image, programMbkm: programMbkm },
 			options
 		);
 		res.status(200).send({ data });
@@ -204,15 +211,15 @@ controller.get(
 );
 
 /*
- * endpoint untuk membuat acc borang
+ * endpoint untuk acc borang by admin
  */
 controller.post(
-	'/acc-borang/:idBorang',
+	'/acc-borang-by-admin/:idBorang',
 	asyncHandler(async (req, res, next) => {
 		const { idBorang } = req.params;
 		await BorangModel.findById(idBorang)
 			.then((borang) => {
-				borang.status = accEnum.acc;
+				borang.statusDosen = accEnum.acc;
 				borang
 					.save()
 					.then((data) => {
@@ -234,15 +241,15 @@ controller.post(
 );
 
 /*
- * endpoint untuk membuat acc borang
+ * endpoint untuk dec borang by admin
  */
 controller.post(
-	'/dec-borang/:idBorang',
+	'/dec-borang-by-admin/:idBorang',
 	asyncHandler(async (req, res, next) => {
 		const { idBorang } = req.params;
 		await BorangModel.findById(idBorang)
 			.then((borang) => {
-				borang.status = accEnum.decline;
+				borang.statusDosen = accEnum.decline;
 				borang
 					.save()
 					.then((data) => {
@@ -262,6 +269,67 @@ controller.post(
 			.catch((err) => next(err));
 	})
 );
+
+/*
+ * endpoint untuk acc borang by super admin
+ */
+controller.post(
+	'/acc-borang-by-superadmin/:idBorang',
+	asyncHandler(async (req, res, next) => {
+		const { idBorang } = req.params;
+		await BorangModel.findById(idBorang)
+			.then((borang) => {
+				borang.statusKajur = accEnum.acc;
+				borang
+					.save()
+					.then((data) => {
+						newBorang
+							.save()
+							.then((data) => {
+								res.status(200).json({ data });
+							})
+							.catch((err) => {
+								next(err);
+							});
+					})
+					.catch((err) => {
+						next(err);
+					});
+			})
+			.catch((err) => next(err));
+	})
+);
+
+/*
+ * endpoint untuk dec borang by super admin
+ */
+controller.post(
+	'/dec-borang-by-superadmin/:idBorang',
+	asyncHandler(async (req, res, next) => {
+		const { idBorang } = req.params;
+		await BorangModel.findById(idBorang)
+			.then((borang) => {
+				borang.statusKajur = accEnum.decline;
+				borang
+					.save()
+					.then((data) => {
+						newBorang
+							.save()
+							.then((data) => {
+								res.status(200).json({ data });
+							})
+							.catch((err) => {
+								next(err);
+							});
+					})
+					.catch((err) => {
+						next(err);
+					});
+			})
+			.catch((err) => next(err));
+	})
+);
+
 
 /*
  * endpoint untuk membuat borang baru di satu mahasiswa

@@ -15,7 +15,13 @@ const mongoose = require('mongoose');
 controller.get(
 	'/',
 	asyncHandler(async (req, res, next) => {
-		const data = await AdminModel.find();
+		const data = await AdminModel.find().populate({
+			path: 'idSubjects',
+			populate: {
+				path: 'idCpmks',
+				model: 'cpmk',
+			},
+		});
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
@@ -30,7 +36,13 @@ controller.get(
 	'/:idAdmin',
 	asyncHandler(async (req, res, next) => {
 		const { idAdmin } = req.params;
-		const data = await AdminModel.findById(idAdmin);
+		const data = await AdminModel.findById(idAdmin).populate({
+			path: 'idSubjects',
+			populate: {
+				path: 'idCpmks',
+				model: 'cpmk',
+			},
+		});
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
@@ -68,13 +80,13 @@ controller.post(
 controller.post(
 	'/register',
 	asyncHandler(async (req, res, next) => {
-		const { fullName, email, password } = req.body;
+		const { fullName, nip, email, password } = req.body;
 		const userEmail = await AdminModel.findOne({ email });
 		if (userEmail) {
 			res.status(402);
 			throw new Error('Email sudah digunakan!');
 		}
-		const user = new AdminModel({ fullName, email, password });
+		const user = new AdminModel({ fullName, nip, email, password });
 		await user
 			.save()
 			.then((data) => {
@@ -238,6 +250,19 @@ controller.post(
 					});
 			})
 			.catch((err) => next(err));
+	})
+);
+
+/*
+ * endpoint untuk update/edit info dosen
+ */
+controller.patch(
+	'/edit-profil/:idAdmin',
+	asyncHandler(async (req, res, next) => {
+		const { idAdmin } = req.params;
+		const options = { new: true };
+		const data = await AdminModel.findByIdAndUpdate(idAdmin, req.body, options);
+		res.status(200).send({ data });
 	})
 );
 

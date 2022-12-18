@@ -20,7 +20,8 @@ const BorangSchema = new Schema({
 	subject: { type: String, default: null },
 	idStudent: { type: ObjectId, ref: 'student' },
 	idAnswers: [{ type: ObjectId, ref: 'answer' }],
-	status: { type: String, enum: accEnum, default: accEnum.pending },
+	statusDosen: { type: String, enum: accEnum, default: accEnum.pending },
+	statusKajur: { type: String, enum: accEnum, default: accEnum.pending },
 });
 
 const BorangModel = model('borang', BorangSchema);
@@ -31,7 +32,7 @@ const MhsSchema = new Schema(
 		fullName: { type: String, required: true },
 		email: { type: String, required: true, unique: true },
 		password: { type: String, required: true },
-		programMBKM: { type: String, default: null },
+		programMbkm: { type: String, default: null },
 		skAcc: { type: String, default: null },
 		logsheet: [{ type: String, default: null }],
 		idBorangs: [{ type: ObjectId, ref: 'borang' }],
