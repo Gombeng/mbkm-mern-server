@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const moment = require('moment');
 const { Schema, model } = mongoose;
 const { ObjectId } = Schema.Types;
 
@@ -16,6 +17,7 @@ const AnswerSchema = new Schema({
 
 const AnswerModel = model('answer', AnswerSchema);
 
+
 const BorangSchema = new Schema({
 	subject: { type: String, default: null },
 	idStudent: { type: ObjectId, ref: 'student' },
@@ -26,6 +28,13 @@ const BorangSchema = new Schema({
 
 const BorangModel = model('borang', BorangSchema);
 
+const LogsheetSchema = new Schema({
+	url: { type: String, default: null },
+	created: { type: String, default: moment().format('LLLL') },
+});
+
+const LogsheetModel = model('logsheet', LogsheetSchema);
+
 const MhsSchema = new Schema(
 	{
 		nim: { type: String, required: true, unique: true },
@@ -34,7 +43,8 @@ const MhsSchema = new Schema(
 		password: { type: String, required: true },
 		programMbkm: { type: String, default: null },
 		skAcc: { type: String, default: null },
-		logsheet: [{ type: String, default: null }],
+		laporanAkhir: { type: String, default: null },
+		logsheet: [{type: String, default: null}],
 		idBorangs: [{ type: ObjectId, ref: 'borang' }],
 		// resetPasswordToken: { type: String, default: null },
 		// resetPasswordExpires: { type: Date, default: null },
@@ -62,4 +72,4 @@ MhsSchema.pre('save', async function (next) {
 
 const MhsModel = model('student', MhsSchema);
 
-module.exports = { MhsModel, BorangModel, AnswerModel, accEnum };
+module.exports = { MhsModel, BorangModel, AnswerModel, LogsheetModel, accEnum };

@@ -8,6 +8,7 @@ const {
 	MhsModel,
 	AnswerModel,
 	BorangModel,
+	LogsheetModel,
 	accEnum,
 } = require('../models/mahasiswa');
 
@@ -17,7 +18,13 @@ const {
 controller.get(
 	'/',
 	asyncHandler(async (req, res, next) => {
-		const data = await MhsModel.find();
+		const data = await MhsModel.find().populate({
+			path: 'idBorangs',
+			populate: {
+				path: 'idAnswers',
+				model: 'answer',
+			},
+		});
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
@@ -105,23 +112,39 @@ controller.post(
 controller.patch(
 	'/sk-mitra/:idMahasiswa',
 	// Todo: jangan lupa pasang middleware ini
-	upload,
+	// upload,
 	asyncHandler(async (req, res, next) => {
 		const { idMahasiswa } = req.params;
-		const { programMbkm } = req.body;
-		const image = req.file.path;
 		const options = { new: true };
-		if (!req.file) {
-			throw new Error('Select an image!');
-		}
+
 		const data = await MhsModel.findByIdAndUpdate(
 			idMahasiswa,
-			{ skAcc: image, programMbkm: programMbkm },
+			{ skAcc: req.body },
 			options
 		);
 		res.status(200).send({ data });
 	})
 );
+// controller.patch(
+// 	'/sk-mitra/:idMahasiswa',
+// 	// Todo: jangan lupa pasang middleware ini
+// 	upload,
+// 	asyncHandler(async (req, res, next) => {
+// 		const { idMahasiswa } = req.params;
+// 		const { programMbkm } = req.body;
+// 		const image = req.file.path;
+// 		const options = { new: true };
+// 		if (!req.file) {
+// 			throw new Error('Select an image!');
+// 		}
+// 		const data = await MhsModel.findByIdAndUpdate(
+// 			idMahasiswa,
+// 			{ skAcc: image, programMbkm: programMbkm },
+// 			options
+// 		);
+// 		res.status(200).send({ data });
+// 	})
+// );
 
 /*
  * endpoint untuk upload logsheet/logbook harian mahasiswa
@@ -142,6 +165,24 @@ controller.post(
 					.catch((err) => next(err));
 			})
 			.catch((err) => next(err));
+	})
+);
+
+/*
+ * endpoint untuk upload laporan akhir mahasiswa
+ */
+controller.patch(
+	'/upload-laporan-akhir/:idMahasiswa',
+	asyncHandler(async (req, res, next) => {
+		const { idMahasiswa } = req.params;
+		const options = { new: true };
+
+		const data = await MhsModel.findByIdAndUpdate(
+			idMahasiswa,
+			{ laporanAkhir: req.body },
+			options
+		);
+		res.status(200).send({ data });
 	})
 );
 
@@ -329,7 +370,6 @@ controller.post(
 			.catch((err) => next(err));
 	})
 );
-
 
 /*
  * endpoint untuk membuat borang baru di satu mahasiswa
