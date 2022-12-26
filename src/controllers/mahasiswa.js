@@ -109,17 +109,18 @@ controller.post(
 /*
  * endpoint untuk upload surat keterangan diterima mitra
  */
-controller.patch(
+controller.post(
 	'/sk-mitra/:idMahasiswa',
 	// Todo: jangan lupa pasang middleware ini
 	// upload,
 	asyncHandler(async (req, res, next) => {
 		const { idMahasiswa } = req.params;
+		const {skAcc} = req.body;
 		const options = { new: true };
 
 		const data = await MhsModel.findByIdAndUpdate(
 			idMahasiswa,
-			{ skAcc: req.body },
+			{ skAcc },
 			options
 		);
 		res.status(200).send({ data });
@@ -171,15 +172,16 @@ controller.post(
 /*
  * endpoint untuk upload laporan akhir mahasiswa
  */
-controller.patch(
+controller.post(
 	'/upload-laporan-akhir/:idMahasiswa',
 	asyncHandler(async (req, res, next) => {
 		const { idMahasiswa } = req.params;
+		const { laporanAkhir } = req.body;
 		const options = { new: true };
 
 		const data = await MhsModel.findByIdAndUpdate(
 			idMahasiswa,
-			{ laporanAkhir: req.body },
+			{ laporanAkhir },
 			options
 		);
 		res.status(200).send({ data });
