@@ -111,11 +111,9 @@ controller.post(
  */
 controller.post(
 	'/sk-mitra/:idMahasiswa',
-	// Todo: jangan lupa pasang middleware ini
-	// upload,
 	asyncHandler(async (req, res, next) => {
 		const { idMahasiswa } = req.params;
-		const {skAcc} = req.body;
+		const { skAcc } = req.body;
 		const options = { new: true };
 
 		const data = await MhsModel.findByIdAndUpdate(
@@ -203,13 +201,17 @@ controller.get(
 );
 
 /*
- * endpoint untuk mendapatkan satu borang berdasarkan id borang
+ * endpoint untuk mendapatkan satu borang berdasarkan id borang (populate)
  */
 controller.get(
 	'/borangs/:idBorang',
 	asyncHandler(async (req, res, next) => {
 		const { idBorang } = req.params;
-		const data = await BorangModel.findById(idBorang);
+		const data = await BorangModel.findById(idBorang).populate({
+			path: 'idAnswers',
+			model: 'answer',
+		});
+
 		if (!data) {
 			throw new Error('Gagal memuat data!');
 		}
